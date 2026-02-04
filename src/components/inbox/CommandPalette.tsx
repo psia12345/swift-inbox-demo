@@ -24,22 +24,30 @@ import {
 interface CommandPaletteProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onMarkDone?: () => void;
 }
 
 const commands = [
-  { icon: CheckCircle, label: "Mark Done", shortcut: "E" },
-  { icon: Clock, label: "Remind Me", shortcut: "H" },
-  { icon: Star, label: "Star", shortcut: "S" },
-  { icon: Move, label: "Move", shortcut: "V" },
-  { icon: Tag, label: "Label", shortcut: "L" },
-  { icon: Reply, label: "Reply", shortcut: "R" },
-  { icon: Forward, label: "Forward", shortcut: "F" },
-  { icon: Archive, label: "Archive", shortcut: "A" },
-  { icon: Trash2, label: "Trash", shortcut: "#" },
-  { icon: Search, label: "Search", shortcut: "/" },
+  { icon: CheckCircle, label: "Mark Done", shortcut: "E", action: "markDone" },
+  { icon: Clock, label: "Remind Me", shortcut: "H", action: "remind" },
+  { icon: Star, label: "Star", shortcut: "S", action: "star" },
+  { icon: Move, label: "Move", shortcut: "V", action: "move" },
+  { icon: Tag, label: "Label", shortcut: "L", action: "label" },
+  { icon: Reply, label: "Reply", shortcut: "R", action: "reply" },
+  { icon: Forward, label: "Forward", shortcut: "F", action: "forward" },
+  { icon: Archive, label: "Archive", shortcut: "A", action: "archive" },
+  { icon: Trash2, label: "Trash", shortcut: "#", action: "trash" },
+  { icon: Search, label: "Search", shortcut: "/", action: "search" },
 ];
 
-export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
+export function CommandPalette({ open, onOpenChange, onMarkDone }: CommandPaletteProps) {
+  const handleSelect = (action: string) => {
+    onOpenChange(false);
+    if (action === "markDone" && onMarkDone) {
+      onMarkDone();
+    }
+  };
+
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <div className="flex items-center gap-2 px-4 py-3 border-b">
@@ -53,9 +61,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           {commands.map((command) => (
             <CommandItem
               key={command.label}
-              onSelect={() => {
-                onOpenChange(false);
-              }}
+              onSelect={() => handleSelect(command.action)}
               className="flex items-center justify-between py-3"
             >
               <div className="flex items-center gap-3">
