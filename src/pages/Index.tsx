@@ -1,40 +1,76 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Sidebar } from "@/components/inbox/Sidebar";
 import { InboxHeader } from "@/components/inbox/InboxHeader";
 import { EmailList } from "@/components/inbox/EmailList";
 import { ContactPanel } from "@/components/inbox/ContactPanel";
 import { CommandPalette, useCommandPalette } from "@/components/inbox/CommandPalette";
-import { emailGroups as initialEmailGroups, contacts, Email, EmailGroup } from "@/data/emails";
+import { MessageView } from "@/components/inbox/MessageView";
+import { emailGroups as initialEmailGroups, contacts, Email, EmailGroup, SplitInboxCategory } from "@/data/emails";
 import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [emailGroups, setEmailGroups] = useState<EmailGroup[]>(initialEmailGroups);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [hoveredEmail, setHoveredEmail] = useState<Email | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<SplitInboxCategory | null>(null);
   const { open, setOpen } = useCommandPalette();
 
-  const totalEmails = emailGroups.reduce((acc, group) => acc + group.emails.length, 0);
+  // Mark email as read when selected
+  const handleSelectEmail = useCallback((email: Email) => {
+    setSelectedEmail(email);
+    
+    // Mark as read
+    if (email.isUnread) {
+      setEmailGroups(prev => 
+        prev.map(group => ({
+          ...group,
+          emails: group.emails.map(e => 
+            e.id === email.id ? { ...e, isUnread: false } : e
+          )
+        }))
+      );
+    }
+  }, []);
+
+  // Filter email groups based on selected category
+  const filteredEmailGroups = useMemo(() => {
+    if (!selectedCategory) return emailGroups;
+    
+    return emailGroups
+      .map(group => ({
+        ...group,
+        emails: group.emails.filter(email => email.category === selectedCategory)
+      }))
+      .filter(group => group.emails.length > 0);
+  }, [emailGroups, selectedCategory]);
+
+  const totalEmails = filteredEmailGroups.reduce((acc, group) => acc + group.emails.length, 0);
   
-  const selectedContact = selectedEmail 
-    ? contacts[selectedEmail.sender] || null 
+  // Show contact for hovered email, or selected email as fallback
+  const displayEmail = hoveredEmail || selectedEmail;
+  const selectedContact = displayEmail 
+    ? contacts[displayEmail.sender] || null 
     : null;
 
-  const markAsDone = useCallback(() => {
-    if (!selectedEmail) return;
-
-    const emailToRemove = selectedEmail;
+  const markAsDone = useCallback((emailToMark?: Email | null) => {
+    const emailToRemove = emailToMark || hoveredEmail || selectedEmail;
+    if (!emailToRemove) return;
     
-    // Find the next email to select
+    // Find the next email to select from filtered groups (only if removing selected email)
     let nextEmail: Email | null = null;
-    for (const group of emailGroups) {
-      const idx = group.emails.findIndex(e => e.id === emailToRemove.id);
-      if (idx !== -1) {
-        if (idx < group.emails.length - 1) {
-          nextEmail = group.emails[idx + 1];
-        } else if (idx > 0) {
-          nextEmail = group.emails[idx - 1];
+    if (selectedEmail && emailToRemove.id === selectedEmail.id) {
+      for (const group of filteredEmailGroups) {
+        const idx = group.emails.findIndex(e => e.id === emailToRemove.id);
+        if (idx !== -1) {
+          if (idx < group.emails.length - 1) {
+            nextEmail = group.emails[idx + 1];
+          } else if (idx > 0) {
+            nextEmail = group.emails[idx - 1];
+          }
+          break;
         }
-        break;
       }
+      setSelectedEmail(nextEmail);
     }
 
     // Remove the email from groups
@@ -45,13 +81,11 @@ const Index = () => {
       })).filter(group => group.emails.length > 0)
     );
 
-    setSelectedEmail(nextEmail);
-
     // Show toast
     toast({
       description: "Marked as Done.",
     });
-  }, [selectedEmail, emailGroups]);
+  }, [selectedEmail, hoveredEmail, filteredEmailGroups]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -77,19 +111,33 @@ const Index = () => {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <InboxHeader count={totalEmails} />
-        <EmailList
-          groups={emailGroups}
-          selectedId={selectedEmail?.id || null}
-          onSelect={setSelectedEmail}
-        />
+        {selectedEmail ? (
+          <MessageView 
+            email={selectedEmail} 
+            onBack={() => setSelectedEmail(null)} 
+          />
+        ) : (
+          <>
+            <InboxHeader 
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              emailGroups={emailGroups}
+            />
+            <EmailList
+              groups={filteredEmailGroups}
+              selectedId={selectedEmail?.id || null}
+              onSelect={handleSelectEmail}
+              onHover={setHoveredEmail}
+            />
+          </>
+        )}
       </div>
 
       {/* Contact Panel */}
       <ContactPanel contact={selectedContact} />
 
       {/* Command Palette */}
-      <CommandPalette open={open} onOpenChange={setOpen} />
+      <CommandPalette open={open} onOpenChange={setOpen} onMarkDone={markAsDone} />
 
       {/* Keyboard shortcut hint */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-muted/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-muted-foreground">
