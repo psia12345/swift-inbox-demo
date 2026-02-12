@@ -8,22 +8,7 @@ export interface Email {
   isUnread?: boolean;
   hasAttachment?: boolean;
   mention?: string;
-  category?: string;
-  labels?: string[];
 }
-
-export const splitInboxCategories = [
-  { id: "important", label: "Important" },
-  { id: "shared", label: "Shared" },
-  { id: "calendar", label: "Calendar" },
-  { id: "news", label: "News" },
-  { id: "github", label: "GitHub" },
-  { id: "linear", label: "Linear" },
-  { id: "engineering", label: "Engineering" },
-  { id: "other", label: "Other" },
-] as const;
-
-export type SplitInboxCategory = typeof splitInboxCategories[number]["id"];
 
 export interface EmailGroup {
   label: string;
@@ -42,7 +27,6 @@ export const emailGroups: EmailGroup[] = [
         preview: "Join us for a fireside chat with the people team about upcoming process...",
         date: "FEB 3",
         isUnread: true,
-        category: "important",
       },
       {
         id: "2",
@@ -51,7 +35,6 @@ export const emailGroups: EmailGroup[] = [
         subject: "Thanks for sharing your feedback!",
         preview: "Your feedback is going to make an impact! We'll let you know when we make these...",
         date: "FEB 3",
-        category: "important",
       },
       {
         id: "3",
@@ -60,8 +43,6 @@ export const emailGroups: EmailGroup[] = [
         subject: "Company metrics update",
         preview: "Hey team! Here's the dashboard that we talked through last week regarding progress towards our...",
         date: "FEB 3",
-        category: "news",
-        labels: ["website", "review"],
       },
       {
         id: "4",
@@ -70,7 +51,6 @@ export const emailGroups: EmailGroup[] = [
         subject: "Product Feedback",
         preview: "Thank you for the note! We're glad to hear you're enjoying Superhuman.",
         date: "FEB 3",
-        category: "shared",
       },
     ],
   },
@@ -84,7 +64,6 @@ export const emailGroups: EmailGroup[] = [
         subject: "[For Review] Latest web mockups",
         preview: "Hey there, we updated the designs with your feedback. Can you please review by end of...",
         date: "FEB 2",
-        category: "engineering",
       },
       {
         id: "6",
@@ -94,7 +73,6 @@ export const emailGroups: EmailGroup[] = [
         preview: "Hi Noel, Here's the partnership proposal we discussed. We're excited about the potential to collaborate!",
         date: "JAN 30",
         isUnread: true,
-        category: "news",
       },
       {
         id: "7",
@@ -105,7 +83,6 @@ export const emailGroups: EmailGroup[] = [
         date: "JAN 30",
         mention: "@Peik",
         hasAttachment: true,
-        category: "github",
       },
     ],
   },
@@ -119,7 +96,6 @@ export const emailGroups: EmailGroup[] = [
         subject: "Superhuman Recap 🚀",
         preview: "Email takes hours each day.",
         date: "JAN 28",
-        category: "calendar",
       },
     ],
   },

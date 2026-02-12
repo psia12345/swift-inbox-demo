@@ -6,10 +6,9 @@ interface EmailListProps {
   groups: EmailGroup[];
   selectedId: string | null;
   onSelect: (email: Email) => void;
-  onHover?: (email: Email | null) => void;
 }
 
-export function EmailList({ groups, selectedId, onSelect, onHover }: EmailListProps) {
+export function EmailList({ groups, selectedId, onSelect }: EmailListProps) {
   return (
     <div className="flex-1 overflow-auto">
       {groups.map((group, groupIndex) => (
@@ -23,8 +22,6 @@ export function EmailList({ groups, selectedId, onSelect, onHover }: EmailListPr
             <div
               key={email.id}
               onClick={() => onSelect(email)}
-              onMouseEnter={() => onHover?.(email)}
-              onMouseLeave={() => onHover?.(null)}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 cursor-pointer border-l-2 border-transparent hover:bg-muted/50 transition-colors",
                 selectedId === email.id && "bg-muted border-l-primary",
@@ -53,19 +50,6 @@ export function EmailList({ groups, selectedId, onSelect, onHover }: EmailListPr
                 {email.hasAttachment && (
                   <Paperclip className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                 )}
-                {email.labels && email.labels.map((label, idx) => (
-                  <span 
-                    key={idx}
-                    className={cn(
-                      "px-1.5 py-0.5 text-xs rounded flex-shrink-0",
-                      label.includes("review") 
-                        ? "bg-green-500/20 text-green-600" 
-                        : "bg-purple-500/20 text-purple-600"
-                    )}
-                  >
-                    {label}
-                  </span>
-                ))}
                 <span className={cn(
                   "text-sm truncate",
                   email.isUnread ? "font-semibold" : ""
